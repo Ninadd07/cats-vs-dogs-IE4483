@@ -49,6 +49,8 @@ python -m datapreprocessing.verify --data-dir ../datasets
 The audit reports counts, dimensions and unreadable files without changing images.
 Summaries and the augmentation figure are saved in `datapreprocessing/outputs/`.
 Run the audit before verification to create the file manifest.
+The summary, augmentation figure and visualization settings are eligible for Git;
+the dataset manifest and generated verification reports remain ignored.
 
 ```python
 from datapreprocessing import CatsDogsDataLoader
@@ -61,8 +63,8 @@ train_loader, val_loader, test_loader = data.get_loaders()
 
 Use `mode="baseline"` for the original transforms. Image size, worker count and
 augmentation settings can be passed to the loader. Keep 224 × 224 for the ViT.
-`train.py` currently uses the root loader; this package is selected through the
-import shown above.
+The root `train.py` uses the original loader; `custom_cnn/train.py` uses this
+package's enhanced pipeline by default.
 
 For repeatable runs, keep the seed, settings, worker count and library versions
 fixed. With zero workers, other PyTorch random operations can affect augmentation.
