@@ -1,0 +1,4 @@
+features/
+weights/
+__pycache__/
+.DS_Store
