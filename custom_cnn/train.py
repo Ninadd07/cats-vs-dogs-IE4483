@@ -2,6 +2,7 @@
 
 import argparse
 import csv
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -21,11 +22,12 @@ from .model import build_custom_cnn, parameter_counts
 DEFAULT_OUTPUT = Path(__file__).resolve().parent / "outputs"
 CLASS_MAPPING = {"cat": 0, "dog": 1}
 HISTORY_FIELDS = ["epoch", "train_loss", "train_accuracy", "val_loss", "val_accuracy",
-                  "learning_rate", "duration_seconds", "new_best"]
+                  "learning_rate", "duration_seconds", "new_best", "train_ce", "train_kd"]
 DEFAULTS = dict(epochs=30, batch_size=32, image_size=224, num_workers=0, seed=42,
                 lr=0.001, weight_decay=1e-4, dropout=0.3, scheduler=True,
                 scheduler_factor=0.5, scheduler_patience=3,
-                early_stopping_patience=7, min_delta=0.0, deterministic=False)
+                early_stopping_patience=7, min_delta=0.0, deterministic=False,
+                teacher_probe=None, kd_alpha=0.5, kd_temperature=4.0)
 
 
 def seed_everything(seed, deterministic=False):
@@ -108,10 +110,14 @@ def restore_rng(state, loaders):
             loader.generator.set_state(saved)
 
 
-def run_epoch(model, loader, criterion, device, optimizer=None):
+def run_epoch(model, loader, criterion, device, optimizer=None, teacher=None,
+              kd_alpha=0.5, kd_temperature=4.0):
     training = optimizer is not None
     model.train(training)
     loss_sum, correct, total = 0.0, 0, 0
+    ce_sum, kd_sum = 0.0, 0.0
+    if teacher is not None:
+        teacher.eval()
     with torch.enable_grad() if training else torch.inference_mode():
         for images, labels in loader:
             images = images.to(device, non_blocking=True)
@@ -120,20 +126,30 @@ def run_epoch(model, loader, criterion, device, optimizer=None):
                 optimizer.zero_grad(set_to_none=True)
             logits = model(images)
             loss = criterion(logits, labels)
+            ce, kd = loss, logits.new_zeros(())
+            if training and teacher is not None:
+                from .distillation import distillation_loss
+                with torch.no_grad():
+                    teacher_logits = teacher(images)
+                loss, ce, kd = distillation_loss(logits, teacher_logits, labels,
+                                                  kd_alpha, kd_temperature)
             if not torch.isfinite(loss):
-                raise FloatingPointError("Non-finite cross-entropy loss")
+                raise FloatingPointError("Non-finite training/evaluation loss")
             if training:
                 loss.backward()
                 optimizer.step()
             loss_sum += loss.item() * labels.size(0)
+            ce_sum += ce.item() * labels.size(0)
+            kd_sum += kd.item() * labels.size(0)
             correct += (logits.argmax(1) == labels).sum().item()
             total += labels.size(0)
     if not total:
         raise ValueError("Cannot process an empty dataset")
-    return {"loss": loss_sum / total, "accuracy": correct / total}
+    return {"loss": loss_sum / total, "accuracy": correct / total,
+            "ce": ce_sum / total, "kd": kd_sum / total}
 
 
-def fit(model, train_loader, val_loader, config, output_dir, device, resume=None):
+def fit(model, train_loader, val_loader, config, output_dir, device, resume=None, teacher=None):
     """Train complete epochs. Checkpoint history is authoritative on resumption."""
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
@@ -181,7 +197,8 @@ def fit(model, train_loader, val_loader, config, output_dir, device, resume=None
     for epoch in range(start_epoch, config["epochs"] + 1):
         started = time.perf_counter()
         learning_rate = optimizer.param_groups[0]["lr"]
-        train = run_epoch(model, train_loader, criterion, device, optimizer)
+        train = run_epoch(model, train_loader, criterion, device, optimizer, teacher,
+                          config.get("kd_alpha", 0.5), config.get("kd_temperature", 4.0))
         val = run_epoch(model, val_loader, criterion, device)
         if scheduler is not None:
             scheduler.step(val["loss"])
@@ -195,7 +212,7 @@ def fit(model, train_loader, val_loader, config, output_dir, device, resume=None
         history.append(dict(epoch=epoch, train_loss=train["loss"], train_accuracy=train["accuracy"],
                             val_loss=val["loss"], val_accuracy=val["accuracy"],
                             learning_rate=learning_rate, duration_seconds=time.perf_counter() - started,
-                            new_best=new_best))
+                            new_best=new_best, train_ce=train["ce"], train_kd=train["kd"]))
         checkpoint = dict(format_version=1, run_id=run_id, epoch=epoch,
                           model_state=model.state_dict(), optimizer_state=optimizer.state_dict(),
                           scheduler_state=scheduler.state_dict() if scheduler is not None else None,
@@ -226,11 +243,13 @@ def get_args(argv=None):
     parser.add_argument("--data-dir")
     parser.add_argument("--output-dir")
     parser.add_argument("--resume", help="Checkpoint from a trusted run")
+    parser.add_argument("--teacher-probe", help="Exported DINOv2 binary probe (.npz); enables KD")
     parser.add_argument("--device", default="auto", help="auto, cpu, cuda, cuda:0 or mps")
     for name in ("epochs", "batch_size", "image_size", "num_workers", "seed",
                  "scheduler_patience", "early_stopping_patience"):
         parser.add_argument("--" + name.replace("_", "-"), type=int)
-    for name in ("lr", "weight_decay", "dropout", "scheduler_factor", "min_delta"):
+    for name in ("lr", "weight_decay", "dropout", "scheduler_factor", "min_delta",
+                 "kd_alpha", "kd_temperature"):
         parser.add_argument("--" + name.replace("_", "-"), type=float)
     parser.add_argument("--scheduler", action=argparse.BooleanOptionalAction, default=None)
     parser.add_argument("--deterministic", action=argparse.BooleanOptionalAction, default=None)
@@ -240,7 +259,9 @@ def get_args(argv=None):
 def main():
     args = get_args()
     saved = load_checkpoint(args.resume) if args.resume else None
-    config = dict(saved["config"] if saved else DEFAULTS)
+    config = dict(DEFAULTS)
+    if saved:
+        config.update(saved["config"])
     for name in DEFAULTS:
         value = getattr(args, name)
         if value is not None:
@@ -254,6 +275,15 @@ def main():
         raise ValueError("Invalid optimizer, patience or worker setting")
     if not 0 < config["scheduler_factor"] < 1:
         raise ValueError("scheduler-factor must be between zero and one")
+    if not 0 <= config["kd_alpha"] <= 1 or not config["kd_temperature"] > 0:
+        raise ValueError("Require kd-alpha in [0, 1] and positive kd-temperature")
+    teacher = None
+    if config["teacher_probe"]:
+        path = Path(config["teacher_probe"]).resolve()
+        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        if saved and config.get("teacher_probe_sha256") != digest:
+            raise ValueError("Teacher probe changed since checkpoint; cannot resume")
+        config.update(teacher_probe=str(path), teacher_probe_sha256=digest)
     device = get_device(args.device)
     seed_everything(config["seed"], config["deterministic"])
     data = CatsDogsDataLoader(data_dir=args.data_dir or config.get("data_dir"),
@@ -271,9 +301,15 @@ def main():
     if output_path.is_relative_to(data.data_dir):
         raise ValueError("Output directory must be outside the original dataset")
     model = build_custom_cnn(dropout=config["dropout"], device=device)
+    if config["teacher_probe"]:
+        from .distillation import load_teacher
+        rng = capture_rng((data.train_loader, data.val_loader))
+        teacher = load_teacher(config["teacher_probe"], config["image_size"], device)
+        # Teacher construction must not change the student's augmentation/dropout RNG.
+        restore_rng(rng, (data.train_loader, data.val_loader))
     print(f"Device: {device} | parameters: {parameter_counts(model)} | "
           f"train/val: {len(data.train_dataset)}/{len(data.val_dataset)}", flush=True)
-    fit(model, data.train_loader, data.val_loader, config, output_path, device, args.resume)
+    fit(model, data.train_loader, data.val_loader, config, output_path, device, args.resume, teacher)
 
 
 if __name__ == "__main__":

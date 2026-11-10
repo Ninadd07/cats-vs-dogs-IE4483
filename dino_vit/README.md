@@ -39,6 +39,11 @@ PYTORCH_ENABLE_MPS_FALLBACK=1 python dino_vit/extract_features.py          # ~8 
 python dino_vit/probe.py --submission dino_vit/submissions/submission_dinov2.csv   # seconds
 ```
 
+To use the fitted scaler + logistic regression as a frozen teacher for the custom
+CNN, export it with `python dino_vit/probe.py --export-teacher dino_vit/weights/teacher_probe.npz`.
+Use the default backbone and 224px cached features. See
+[custom CNN distillation instructions](../custom_cnn/README.md#dinov2-knowledge-distillation).
+
 The scripts read `datasets/{train,val,test}` next to this folder; pass `--data-dir PATH` to extract_features.py to use another location. Run `extract_features.py` again only if the
 dataset or backbone changes; `probe.py` can be re-run freely.
 

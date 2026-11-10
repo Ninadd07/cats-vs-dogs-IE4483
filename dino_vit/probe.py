@@ -32,6 +32,7 @@ def main():
     p.add_argument("--train-per-class", type=int, default=None, help="few-shot: first N per class (seeded)")
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--submission", default=None)
+    p.add_argument("--export-teacher", type=Path, help="Export scaler + binary probe for CNN distillation")
     args = p.parse_args()
 
     feat = args.features
@@ -48,7 +49,7 @@ def main():
     xtr_s, xva_s = scaler.transform(xtr), scaler.transform(xva)
 
     results = {}
-    best = (0.0, None)
+    best = (-1.0, None)
     for c in args.cs:
         clf = LogisticRegression(C=c, max_iter=2000).fit(xtr_s, ytr)
         acc = clf.score(xva_s, yva)
@@ -67,9 +68,17 @@ def main():
     (feat / "probe_results.json").write_text(json.dumps(
         {"train_size": len(ytr), "best_logreg_C": best[1], "best_logreg_val_acc": best[0], "all": results}, indent=2))
 
+    if args.submission or args.export_teacher:
+        clf = LogisticRegression(C=best[1], max_iter=2000).fit(xtr_s, ytr)
+    if args.export_teacher:
+        args.export_teacher.parent.mkdir(parents=True, exist_ok=True)
+        with args.export_teacher.open("wb") as stream:
+            np.savez(stream, mean=scaler.mean_, scale=scaler.scale_, coef=clf.coef_,
+                     intercept=clf.intercept_, classes=clf.classes_, model=MODEL,
+                     image_size=224, regularization_c=best[1], train_size=len(ytr))
+        print(f"Exported teacher probe to {args.export_teacher}")
     if args.submission:
         xte, ids = load(feat / "test.npz")
-        clf = LogisticRegression(C=best[1], max_iter=2000).fit(xtr_s, ytr)
         pred = clf.predict(scaler.transform(xte))
         with open(args.submission, "w", newline="") as f:
             w = csv.writer(f)
