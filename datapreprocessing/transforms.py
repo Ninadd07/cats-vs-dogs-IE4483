@@ -1,4 +1,8 @@
-"""Baseline and conservative training augmentation; deterministic evaluation."""
+"""No/baseline/conservative training augmentation; deterministic evaluation.
+
+Training modes: none = evaluation transform (resize + normalise); baseline = none + random
+horizontal flip; enhanced = random resized crop, flip, small rotation and colour jitter.
+"""
 
 from torchvision import transforms as T
 from torchvision.transforms import InterpolationMode
@@ -27,11 +31,13 @@ def build_train_transform(image_size=224, mode="enhanced", scale=(0.8, 1.0),
     harsh black corners. Small filled corners may still be visible.
     """
     evaluation = build_eval_transform(image_size)
+    if mode == "none":
+        return evaluation
     if mode == "baseline":
         return T.Compose([evaluation.transforms[0], T.RandomHorizontalFlip(),
                           *evaluation.transforms[1:]])
     if mode != "enhanced":
-        raise ValueError("mode must be 'baseline' or 'enhanced'")
+        raise ValueError("mode must be 'none', 'baseline' or 'enhanced'")
     if not (0 < scale[0] <= scale[1] <= 1):
         raise ValueError("scale must satisfy 0 < minimum <= maximum <= 1")
     if not (0 < ratio[0] <= ratio[1]):

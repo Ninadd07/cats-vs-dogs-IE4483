@@ -1,0 +1,38 @@
+{
+  "accuracy": 0.9504,
+  "confusion_matrix": [
+    [
+      2334,
+      166
+    ],
+    [
+      82,
+      2418
+    ]
+  ],
+  "per_class": {
+    "cat": {
+      "label": 0,
+      "precision": 0.9660596026490066,
+      "recall": 0.9336,
+      "f1": 0.9495524816924329,
+      "support": 2500
+    },
+    "dog": {
+      "label": 1,
+      "precision": 0.9357585139318886,
+      "recall": 0.9672,
+      "f1": 0.951219512195122,
+      "support": 2500
+    }
+  },
+  "macro_f1": 0.9503859969437775,
+  "loss": 0.13802978728525342,
+  "samples": 5000,
+  "checkpoint": "/home/abhiram001/cats-vs-dogs-IE4483/custom_cnn/outputs/sweep/lr3e-4_wd1e-4_do0.5/best.pth",
+  "epoch": 24,
+  "class_mapping": {
+    "cat": 0,
+    "dog": 1
+  }
+}

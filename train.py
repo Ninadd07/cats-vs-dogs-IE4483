@@ -1,5 +1,8 @@
 import argparse
 import csv
+import random
+
+import numpy as np
 
 import torch
 import torch.nn as nn
@@ -8,6 +11,16 @@ import torch.optim as optim
 from dataloader import CatsDogsDataLoader
 from vit import build_vit_model
 from resnet import build_resnet_model
+
+
+def seed_everything(seed):
+    """Seed Python, NumPy and PyTorch (CPU + CUDA). cuDNN autotuning is disabled so convolution
+    algorithms are chosen consistently; GPU kernels can still differ in the last bits."""
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.benchmark = False
 
 
 def get_device():
@@ -236,6 +249,22 @@ def get_args():
     )
 
     parser.add_argument(
+        "--augmentation",
+        type=str,
+        default="flip",
+        choices=["none", "flip", "enhanced"],
+        help="Training augmentation: none, horizontal flip only, or enhanced "
+             "(random resized crop + flip + rotation + colour jitter)",
+    )
+
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+        help="Random seed for head initialisation, shuffling, augmentation and dropout",
+    )
+
+    parser.add_argument(
         "--pretrained",
         action="store_true",
         help="Use pretrained ImageNet weights",
@@ -266,6 +295,7 @@ def get_args():
 
 def main():
     args = get_args()
+    seed_everything(args.seed)
 
     device = get_device()
 
@@ -274,6 +304,8 @@ def main():
     print(f"Learning rate: {args.lr}", flush=True)
     print(f"Batch size: {args.batch_size}", flush=True)
     print(f"Epochs: {args.epochs}", flush=True)
+    print(f"Seed: {args.seed}", flush=True)
+    print(f"Augmentation: {args.augmentation}", flush=True)
 
     data = CatsDogsDataLoader(
         data_dir=args.data_dir,
@@ -281,6 +313,8 @@ def main():
         image_size=args.image_size,
         num_workers=args.num_workers,
         pin_memory=False,
+        seed=args.seed,
+        augmentation=args.augmentation,
     )
 
     train_loader, val_loader, test_loader = data.get_loaders()

@@ -1,0 +1,77 @@
+{
+  "data_dir": "datasets/cifar10",
+  "device": "cuda",
+  "num_workers": 4,
+  "limit": null,
+  "val_size": 5000,
+  "split_seed": 42,
+  "no_amp": false,
+  "minority_classes": [
+    2,
+    3,
+    4,
+    5,
+    6
+  ],
+  "minority_fraction": 0.05,
+  "output_dir": "cifar10/outputs/imb_f0.05/resnet9_cbweights_seed42",
+  "teacher": null,
+  "kd_alpha": 0.0,
+  "kd_temperature": 4.0,
+  "class_weights": "effective",
+  "cb_beta": 0.999,
+  "sampler": "random",
+  "logit_adjust": 0.0,
+  "epochs": 60,
+  "batch_size": 128,
+  "arch": "resnet9",
+  "optimizer": "sgd",
+  "lr": 0.1,
+  "weight_decay": 0.0005,
+  "dropout": 0.0,
+  "seed": 42,
+  "deterministic": false,
+  "classes": [
+    "airplane",
+    "automobile",
+    "bird",
+    "cat",
+    "deer",
+    "dog",
+    "frog",
+    "horse",
+    "ship",
+    "truck"
+  ],
+  "train_size": 23625,
+  "val_size_actual": 2625,
+  "parameters": {
+    "total": 6573130,
+    "trainable": 6573130
+  },
+  "imbalance": {
+    "classes": [
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "fraction": 0.05
+  },
+  "train_class_counts": [
+    4500,
+    4500,
+    225,
+    225,
+    225,
+    225,
+    225,
+    4500,
+    4500,
+    4500
+  ],
+  "selection_metric": "val_balanced_accuracy",
+  "torch_version": "2.12.0+cu130",
+  "teacher_sha256": null
+}

@@ -1,0 +1,32 @@
+{
+  "epochs": 30,
+  "batch_size": 32,
+  "image_size": 224,
+  "num_workers": 4,
+  "seed": 42,
+  "lr": 0.0003,
+  "weight_decay": 0.0001,
+  "dropout": 0.3,
+  "scheduler": true,
+  "scheduler_factor": 0.5,
+  "scheduler_patience": 3,
+  "early_stopping_patience": 7,
+  "min_delta": 0.0,
+  "deterministic": false,
+  "teacher_probe": null,
+  "kd_alpha": 0.5,
+  "kd_temperature": 4.0,
+  "data_dir": "/home/abhiram001/cats-vs-dogs-IE4483/datasets",
+  "preprocessing": "enhanced",
+  "num_classes": 2,
+  "class_mapping": {
+    "cat": 0,
+    "dog": 1
+  },
+  "device": "cuda",
+  "torch_version": "2.12.0+cu130",
+  "torchvision_version": "0.27.0+cu130",
+  "numpy_version": "2.2.6",
+  "train_transform": "Compose(\n    RandomResizedCrop(size=(224, 224), scale=(0.8, 1.0), ratio=(0.9, 1.1), interpolation=bilinear, antialias=True)\n    RandomHorizontalFlip(p=0.5)\n    RandomRotation(degrees=[-10.0, 10.0], interpolation=bilinear, expand=False, fill=(124, 116, 104))\n    ColorJitter(brightness=(0.9, 1.1), contrast=(0.9, 1.1), saturation=(0.9, 1.1), hue=None)\n    ToTensor()\n    Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])\n)",
+  "eval_transform": "Compose(\n    Resize(size=(224, 224), interpolation=bilinear, max_size=None, antialias=True)\n    ToTensor()\n    Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])\n)"
+}
