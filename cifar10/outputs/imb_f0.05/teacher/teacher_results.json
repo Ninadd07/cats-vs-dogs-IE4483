@@ -1,0 +1,52 @@
+{
+  "model": "vit_base_patch14_dinov2.lvd142m",
+  "image_size": 224,
+  "classes": [
+    "airplane",
+    "automobile",
+    "bird",
+    "cat",
+    "deer",
+    "dog",
+    "frog",
+    "horse",
+    "ship",
+    "truck"
+  ],
+  "split_seed": 42,
+  "val_size": 5000,
+  "train_size": 23625,
+  "regularization_c": 0.001,
+  "val_accuracy": 0.977,
+  "test_accuracy": 0.9754,
+  "c_sweep": {
+    "C=0.001": 0.977,
+    "C=0.01": 0.9738000000000001,
+    "C=0.1": 0.9746,
+    "C=1": 0.9743999999999999
+  },
+  "imbalance": {
+    "classes": [
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "fraction": 0.05
+  },
+  "balanced_teacher": true,
+  "selection_metric": "balanced acc",
+  "train_class_counts": [
+    4500,
+    4500,
+    225,
+    225,
+    225,
+    225,
+    225,
+    4500,
+    4500,
+    4500
+  ]
+}

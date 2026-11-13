@@ -1,0 +1,28 @@
+{
+  "model": "vit_base_patch14_dinov2.lvd142m",
+  "image_size": 224,
+  "classes": [
+    "airplane",
+    "automobile",
+    "bird",
+    "cat",
+    "deer",
+    "dog",
+    "frog",
+    "horse",
+    "ship",
+    "truck"
+  ],
+  "split_seed": 42,
+  "val_size": 5000,
+  "train_size": 45000,
+  "regularization_c": 0.01,
+  "val_accuracy": 0.9822,
+  "test_accuracy": 0.9814,
+  "c_sweep": {
+    "C=0.001": 0.9806,
+    "C=0.01": 0.9822,
+    "C=0.1": 0.9814,
+    "C=1": 0.9788
+  }
+}

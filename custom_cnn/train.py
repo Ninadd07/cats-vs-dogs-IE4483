@@ -27,7 +27,7 @@ DEFAULTS = dict(epochs=30, batch_size=32, image_size=224, num_workers=0, seed=42
                 lr=0.001, weight_decay=1e-4, dropout=0.3, scheduler=True,
                 scheduler_factor=0.5, scheduler_patience=3,
                 early_stopping_patience=7, min_delta=0.0, deterministic=False,
-                teacher_probe=None, kd_alpha=0.5, kd_temperature=4.0)
+                teacher_probe=None, kd_alpha=0.5, kd_temperature=4.0, augmentation="enhanced")
 
 
 def seed_everything(seed, deterministic=False):
@@ -245,6 +245,8 @@ def get_args(argv=None):
     parser.add_argument("--resume", help="Checkpoint from a trusted run")
     parser.add_argument("--teacher-probe", help="Exported DINOv2 binary probe (.npz); enables KD")
     parser.add_argument("--device", default="auto", help="auto, cpu, cuda, cuda:0 or mps")
+    parser.add_argument("--augmentation", choices=("none", "baseline", "enhanced"),
+                        help="Training augmentation (default enhanced; baseline = flip only)")
     for name in ("epochs", "batch_size", "image_size", "num_workers", "seed",
                  "scheduler_patience", "early_stopping_patience"):
         parser.add_argument("--" + name.replace("_", "-"), type=int)
@@ -287,11 +289,11 @@ def main():
     device = get_device(args.device)
     seed_everything(config["seed"], config["deterministic"])
     data = CatsDogsDataLoader(data_dir=args.data_dir or config.get("data_dir"),
-                             mode="enhanced", seed=config["seed"],
+                             mode=config["augmentation"], seed=config["seed"],
                              batch_size=config["batch_size"], image_size=config["image_size"],
                              num_workers=config["num_workers"], pin_memory=device.type == "cuda")
     seed_everything(config["seed"], config["deterministic"])
-    config.update(data_dir=str(data.data_dir), preprocessing="enhanced", num_classes=2,
+    config.update(data_dir=str(data.data_dir), preprocessing=config["augmentation"], num_classes=2,
                   class_mapping=data.get_class_to_idx(), device=str(device),
                   torch_version=str(torch.__version__), torchvision_version=str(torchvision.__version__),
                   numpy_version=np.__version__, train_transform=repr(data.train_transform),

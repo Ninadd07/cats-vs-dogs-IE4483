@@ -1,6 +1,7 @@
 import os
 from PIL import Image
 
+import torch
 from torch.utils.data import Dataset, DataLoader
 from torchvision import datasets, transforms
 
@@ -43,6 +44,8 @@ class CatsDogsDataLoader:
         image_size=224,
         num_workers=0,
         pin_memory=False,
+        seed=None,
+        augmentation="flip",
     ):
         self.data_dir = data_dir
         self.batch_size = batch_size
@@ -50,15 +53,13 @@ class CatsDogsDataLoader:
         self.num_workers = num_workers
         self.pin_memory = pin_memory
 
-        self.train_transform = transforms.Compose([
-            transforms.Resize((image_size, image_size)),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            transforms.Normalize(
-                mean=[0.485, 0.456, 0.406],
-                std=[0.229, 0.224, 0.225],
-            ),
-        ])
+        # none / flip / enhanced, defined once in datapreprocessing so every model in the
+        # augmentation study uses identical transforms ("flip" is the original behaviour).
+        from datapreprocessing.transforms import build_train_transform
+        modes = {"none": "none", "flip": "baseline", "enhanced": "enhanced"}
+        if augmentation not in modes:
+            raise ValueError(f"augmentation must be one of {sorted(modes)}")
+        self.train_transform = build_train_transform(image_size, modes[augmentation])
 
         self.eval_transform = transforms.Compose([
             transforms.Resize((image_size, image_size)),
@@ -94,6 +95,8 @@ class CatsDogsDataLoader:
             shuffle=True,
             num_workers=num_workers,
             pin_memory=pin_memory,
+            # Seeds shuffling and, through worker base seeds, the random augmentation.
+            generator=torch.Generator().manual_seed(seed) if seed is not None else None,
         )
 
         self.val_loader = DataLoader(

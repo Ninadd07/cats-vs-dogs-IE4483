@@ -1,0 +1,40 @@
+{
+  "data_dir": "datasets/cifar10",
+  "device": "cuda",
+  "num_workers": 4,
+  "limit": null,
+  "val_size": 5000,
+  "split_seed": 42,
+  "no_amp": false,
+  "output_dir": "cifar10/outputs/ce_seed42",
+  "teacher": null,
+  "kd_alpha": 0.0,
+  "kd_temperature": 4.0,
+  "epochs": 60,
+  "batch_size": 128,
+  "lr": 0.003,
+  "weight_decay": 0.0005,
+  "dropout": 0.3,
+  "seed": 42,
+  "deterministic": false,
+  "classes": [
+    "airplane",
+    "automobile",
+    "bird",
+    "cat",
+    "deer",
+    "dog",
+    "frog",
+    "horse",
+    "ship",
+    "truck"
+  ],
+  "train_size": 45000,
+  "val_size_actual": 5000,
+  "parameters": {
+    "total": 1207402,
+    "trainable": 1207402
+  },
+  "torch_version": "2.12.0+cu130",
+  "teacher_sha256": null
+}

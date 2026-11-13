@@ -1,0 +1,67 @@
+{
+  "data_dir": "datasets/cifar10",
+  "device": "cuda",
+  "num_workers": 4,
+  "limit": null,
+  "val_size": 5000,
+  "split_seed": 42,
+  "no_amp": false,
+  "output_dir": "cifar10/outputs/kd_seed42",
+  "teacher": {
+    "model": "vit_base_patch14_dinov2.lvd142m",
+    "image_size": 224,
+    "classes": [
+      "airplane",
+      "automobile",
+      "bird",
+      "cat",
+      "deer",
+      "dog",
+      "frog",
+      "horse",
+      "ship",
+      "truck"
+    ],
+    "split_seed": 42,
+    "val_size": 5000,
+    "train_size": 45000,
+    "regularization_c": 0.01,
+    "val_accuracy": 0.9822,
+    "test_accuracy": 0.9814,
+    "c_sweep": {
+      "C=0.001": 0.9806,
+      "C=0.01": 0.9822,
+      "C=0.1": 0.9814,
+      "C=1": 0.9788
+    }
+  },
+  "kd_alpha": 0.5,
+  "kd_temperature": 4.0,
+  "epochs": 60,
+  "batch_size": 128,
+  "lr": 0.003,
+  "weight_decay": 0.0005,
+  "dropout": 0.3,
+  "seed": 42,
+  "deterministic": false,
+  "classes": [
+    "airplane",
+    "automobile",
+    "bird",
+    "cat",
+    "deer",
+    "dog",
+    "frog",
+    "horse",
+    "ship",
+    "truck"
+  ],
+  "train_size": 45000,
+  "val_size_actual": 5000,
+  "parameters": {
+    "total": 1207402,
+    "trainable": 1207402
+  },
+  "torch_version": "2.12.0+cu130",
+  "teacher_sha256": "3e218e985c64cd1955d42008c0a5c2a301fb75a7717748e1f78ceacbda539a81"
+}

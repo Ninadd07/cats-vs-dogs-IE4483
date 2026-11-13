@@ -1,0 +1,128 @@
+{
+  "data_dir": "datasets/cifar10",
+  "device": "cuda",
+  "num_workers": 4,
+  "limit": null,
+  "val_size": 5000,
+  "split_seed": 42,
+  "no_amp": false,
+  "minority_classes": [
+    2,
+    3,
+    4,
+    5,
+    6
+  ],
+  "minority_fraction": 0.05,
+  "output_dir": "cifar10/outputs/imb_f0.05/resnet9_kd_logitadj_seed42",
+  "teacher": {
+    "model": "vit_base_patch14_dinov2.lvd142m",
+    "image_size": 224,
+    "classes": [
+      "airplane",
+      "automobile",
+      "bird",
+      "cat",
+      "deer",
+      "dog",
+      "frog",
+      "horse",
+      "ship",
+      "truck"
+    ],
+    "split_seed": 42,
+    "val_size": 5000,
+    "train_size": 23625,
+    "regularization_c": 0.001,
+    "val_accuracy": 0.977,
+    "test_accuracy": 0.9754,
+    "c_sweep": {
+      "C=0.001": 0.977,
+      "C=0.01": 0.9738000000000001,
+      "C=0.1": 0.9746,
+      "C=1": 0.9743999999999999
+    },
+    "imbalance": {
+      "classes": [
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "fraction": 0.05
+    },
+    "balanced_teacher": true,
+    "selection_metric": "balanced acc",
+    "train_class_counts": [
+      4500,
+      4500,
+      225,
+      225,
+      225,
+      225,
+      225,
+      4500,
+      4500,
+      4500
+    ]
+  },
+  "kd_alpha": 0.5,
+  "kd_temperature": 4.0,
+  "class_weights": "none",
+  "cb_beta": 0.999,
+  "sampler": "random",
+  "logit_adjust": 1.0,
+  "epochs": 60,
+  "batch_size": 128,
+  "arch": "resnet9",
+  "optimizer": "sgd",
+  "lr": 0.1,
+  "weight_decay": 0.0005,
+  "dropout": 0.0,
+  "seed": 42,
+  "deterministic": false,
+  "classes": [
+    "airplane",
+    "automobile",
+    "bird",
+    "cat",
+    "deer",
+    "dog",
+    "frog",
+    "horse",
+    "ship",
+    "truck"
+  ],
+  "train_size": 23625,
+  "val_size_actual": 2625,
+  "parameters": {
+    "total": 6573130,
+    "trainable": 6573130
+  },
+  "imbalance": {
+    "classes": [
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "fraction": 0.05
+  },
+  "train_class_counts": [
+    4500,
+    4500,
+    225,
+    225,
+    225,
+    225,
+    225,
+    4500,
+    4500,
+    4500
+  ],
+  "selection_metric": "val_balanced_accuracy",
+  "torch_version": "2.12.0+cu130",
+  "teacher_sha256": "93dbc447a9e01a449559c2957fb113156bea236555d03e314b7fee87b033645b"
+}

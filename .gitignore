@@ -46,3 +46,34 @@ slurm-*.err
 !/custom_cnn/predictions_and_evaluation/outputs/confusion_matrix.png
 !/custom_cnn/predictions_and_evaluation/outputs/validation_examples.png
 !/custom_cnn/predictions_and_evaluation/outputs/prediction_examples.png
+
+# CIFAR-10 runs: keep configs, histories and metrics; drop checkpoints and feature caches.
+/cifar10/outputs/**
+!/cifar10/outputs/**/
+!/cifar10/outputs/**/config.json
+!/cifar10/outputs/**/training_history.csv
+!/cifar10/outputs/**/test_metrics.json
+!/cifar10/outputs/**/teacher_results.json
+
+# Custom-CNN sweep and augmentation runs: keep configs, histories and metrics only.
+!/custom_cnn/outputs/sweep/
+!/custom_cnn/outputs/augmentation/
+/custom_cnn/outputs/sweep/**
+/custom_cnn/outputs/augmentation/**
+!/custom_cnn/outputs/sweep/**/
+!/custom_cnn/outputs/augmentation/**/
+!/custom_cnn/outputs/sweep/sweep_results.csv
+!/custom_cnn/outputs/sweep/**/config.json
+!/custom_cnn/outputs/sweep/**/training_history.csv
+!/custom_cnn/outputs/sweep/**/validation_metrics.json
+!/custom_cnn/outputs/augmentation/**/config.json
+!/custom_cnn/outputs/augmentation/**/training_history.csv
+!/custom_cnn/outputs/augmentation/**/validation_metrics.json
+
+# Pretrained ResNet-50 / ViT-B/16 runs (root train.py): keep training logs only.
+/outputs/**
+!/outputs/**/
+!/outputs/pretrained/*_seed*/train.log
+
+# Slurm job logs
+/logs/
