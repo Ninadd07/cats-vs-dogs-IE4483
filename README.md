@@ -44,8 +44,6 @@ selection. Test labels are unavailable, so test accuracy cannot be reported.
 | ResNet-50, ImageNet-pretrained, fine-tuned | 99.43% ± 0.12 | Seeds 42/43/44, flip only (`cluster/pretrained.sbatch`) |
 | ViT-B/16, ImageNet-pretrained, fine-tuned | 99.41% ± 0.03 | Seeds 42/43/44, flip only (`cluster/pretrained.sbatch`) |
 | Frozen DINOv2 + logistic regression | 99.88% | Existing reported result; C=0.001 |
-| DINOv2-distilled CNN | Pending | Implemented and smoke-tested; full training not run |
-| Label-smoothing control, robustness, latency study | Pending | Proposed experiments |
 | CIFAR-10 students, CE / + KD (test accuracy) | CNN 90.86 / 91.35%; ResNet-9 93.93 / 94.78% | Seed 42; teacher 98.14% (`cifar10/outputs/`) |
 | CIFAR-10 class imbalance, ResNet-9 (test accuracy) | CE 80.26%; logit adjustment 84.01% (best) | Seed 42; all six methods in `cifar10/outputs/imb_f0.05/` |
 
